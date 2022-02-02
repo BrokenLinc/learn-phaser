@@ -2,53 +2,113 @@ import 'phaser';
 
 import './index.css';
 
-const Phaser = window.Phaser;
+import {
+  KEYDOWN,
+  SCENE,
+  SCREEN,
+  STATE,
+  SCREEN_CENTER,
+  SPRITE_KEY,
+} from './types';
+import { Camera } from './camera';
+import { Circuit } from './circuit';
+import { Settings } from './settings';
+import { Player } from './player';
+
+let state: STATE = STATE.INIT;
+export class MainScene extends Phaser.Scene {
+  camera?: Camera;
+  player?: Player;
+  circuit?: Circuit;
+  settings?: Settings;
+  sprites?: Record<SPRITE_KEY, Phaser.GameObjects.Image>;
+
+  constructor() {
+    super({ key: SCENE.MAIN });
+  }
+
+  preload() {
+    this.load.image(SPRITE_KEY.background, './assets/img_back.png');
+    this.load.image(SPRITE_KEY.playerCar, './assets/img_player.png');
+  }
+
+  create() {
+    this.sprites = {
+      background: this.add.image(
+        SCREEN_CENTER.X,
+        SCREEN_CENTER.Y,
+        SPRITE_KEY.background
+      ),
+      playerCar: this.add.image(0, 0, SPRITE_KEY.playerCar).setVisible(false),
+    };
+
+    this.circuit = new Circuit(this);
+    this.player = new Player(this);
+    this.camera = new Camera(this);
+    this.settings = new Settings(this);
+
+    this.input.keyboard.on(KEYDOWN.P, () => {
+      if (this.settings) this.settings.txtPause.text = '[P] Resume';
+      this.scene.pause();
+      this.scene.launch(SCENE.PAUSE);
+    });
+    this.events.on('resume', () => {
+      this.settings?.show();
+    });
+  }
+
+  update(time: number, delta: number) {
+    // console.log(state);
+    switch (state) {
+      case STATE.INIT:
+        this.camera?.init();
+        this.player?.init();
+
+        state = STATE.RESTART;
+        break;
+      case STATE.RESTART:
+        this.circuit?.create();
+        this.player?.restart();
+
+        state = STATE.PLAY;
+        break;
+      case STATE.PLAY:
+        const dt = Math.min(1, delta / 1000); // ms to sec
+
+        this.player?.update(dt);
+        this.camera?.update();
+        this.circuit?.render3D();
+        break;
+      case STATE.GAMEOVER:
+        break;
+    }
+  }
+}
+class PauseScene extends Phaser.Scene {
+  constructor() {
+    super({ key: SCENE.PAUSE });
+  }
+  preload() {}
+  create() {
+    this.input.keyboard.on(KEYDOWN.P, () => {
+      this.scene.resume(SCENE.MAIN);
+      this.scene.stop();
+    });
+  }
+  update(time: number, delta: number) {}
+}
 
 const config = {
   type: Phaser.AUTO,
-  width: 800,
-  height: 600,
-  physics: {
-    default: 'arcade',
-    arcade: {
-      gravity: { y: 200 },
-    },
+  width: SCREEN.W,
+  height: SCREEN.H,
+
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: {
-    preload: preload,
-    create: create,
-  },
+
+  scene: [MainScene, PauseScene],
 };
-
-function preload(this: Phaser.Scene) {
-  const { load } = this;
-  load.setBaseURL('http://labs.phaser.io');
-
-  load.image('sky', 'assets/skies/space3.png');
-  load.image('logo', 'assets/sprites/phaser3-logo.png');
-  load.image('red', 'assets/particles/red.png');
-}
-
-function create(this: Phaser.Scene) {
-  const { add, physics } = this;
-
-  add.image(400, 300, 'sky');
-
-  const particles = add.particles('red');
-
-  const emitter = particles.createEmitter({
-    speed: 100,
-    scale: { start: 1, end: 0 },
-    blendMode: 'ADD',
-  });
-
-  const logo = physics.add.image(400, 100, 'logo');
-
-  logo.setVelocity(100, 200);
-  logo.setBounce(1, 1);
-  logo.setCollideWorldBounds(true);
-
-  emitter.startFollow(logo);
-}
 
 new Phaser.Game(config);
