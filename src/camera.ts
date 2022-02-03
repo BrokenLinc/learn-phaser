@@ -21,7 +21,7 @@ export class Camera {
   }
 
   init() {
-    this.distToPlane = 1 / (this.y / this.distToPlayer);
+    this.distToPlane = 0.8 / (this.y / this.distToPlayer);
   }
 
   update() {
@@ -33,6 +33,7 @@ export class Camera {
 
     // player.x is normalized to [-1, 1], camera must be multiplied
     this.x = player.x * circuit.roadWidth;
+    this.y = player.y + 1000;
 
     this.z = player.z - this.distToPlayer;
 

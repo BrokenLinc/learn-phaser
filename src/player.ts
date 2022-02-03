@@ -57,5 +57,8 @@ export class Player {
     if (this.z >= circuit.roadLength) {
       this.z -= circuit.roadLength;
     }
+
+    const playerSegment = circuit.getSegment(this.z);
+    this.y = playerSegment.point.world.y;
   }
 }

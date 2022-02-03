@@ -63,6 +63,7 @@ export interface Point {
   world: WorldCoords;
   screen: ScreenCoords;
   scale: number;
+  turn: number;
 }
 
 export interface SegmentColor {

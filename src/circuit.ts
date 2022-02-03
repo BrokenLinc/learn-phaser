@@ -41,8 +41,8 @@ export class Circuit {
     this.texture = scene.add.renderTexture(0, 0, SCREEN.W, SCREEN.H);
     this.segments = [];
     this.segmentLength = 100;
-    this.total_segments = 0;
-    this.visible_segments = 200;
+    this.total_segments = 300;
+    this.visible_segments = 300;
     this.rumble_segments = 5;
     this.roadLanes = 3;
     this.roadWidth = 1000;
@@ -62,19 +62,16 @@ export class Circuit {
       this.segments[this.segments.length - 1 - n].color.road = COLOR.charcoal;
     }
 
-    this.total_segments = this.segments.length;
-
     this.roadLength = this.total_segments * this.segmentLength;
   }
 
   createRoad() {
-    this.createSection(300); // magic
+    this.createSection(this.total_segments);
   }
 
   createSection(nSegments: number) {
     for (var i = 0; i < nSegments; i += 1) {
       this.createSegment();
-      // console.log('Created segment:', this.segments[i]);
     }
   }
 
@@ -84,9 +81,14 @@ export class Circuit {
     this.segments.push({
       index: n,
       point: {
-        world: { x: 0, y: 0, z: n * this.segmentLength },
+        world: {
+          x: 0,
+          y: Math.sin((n / this.total_segments) * 10 * Math.PI * 2) * 300,
+          z: n * this.segmentLength,
+        },
         screen: { x: 0, y: 0, w: 0, h: 0 },
         scale: -1,
+        turn: 0, //Math.sin((n / this.total_segments) * Math.PI * 2) * 5,
       },
       color:
         Math.floor(n / this.rumble_segments) % 2
@@ -128,10 +130,15 @@ export class Circuit {
     this.graphics.clear();
 
     const camera = this.scene.camera;
-    if (!camera) return;
+    const player = this.scene.player;
+    if (!camera || !player) return;
 
     const baseSegment = this.getSegment(camera.z);
     const baseIndex = baseSegment?.index;
+    const playerSegment = this.getSegment(player.z);
+
+    let turn = 0;
+    let offset = 0;
 
     for (let n = 0; n < this.visible_segments; n += 1) {
       const currIndex = (baseIndex + n) % this.total_segments;
@@ -142,25 +149,32 @@ export class Circuit {
 
       this.project3D(currSegment.point, camera, offsetZ);
 
+      turn += currSegment.point.turn;
+      offset += turn;
+
+      currSegment.point.screen.x += offset * currSegment.point.scale * 1000;
+    }
+
+    for (let n = this.visible_segments - 1; n >= 0; n -= 1) {
+      const currIndex = (baseIndex + n) % this.total_segments;
+      const currSegment = this.segments[currIndex];
+      const prevIndex = currIndex > 0 ? currIndex - 1 : this.total_segments - 1;
+      const prevSegment = this.segments[prevIndex];
+
       // draw this segment only if it is above the clipping bottom line
       const currBottomLine = currSegment.point.screen.y;
 
       if (n > 0 && currBottomLine < this.clipBottomLine) {
-        const prevIndex =
-          currIndex > 0 ? currIndex - 1 : this.total_segments - 1;
-        const prevSegment = this.segments[prevIndex];
-
-        const p1 = prevSegment.point.screen;
-        const p2 = currSegment.point.screen;
-
-        this.drawSegment(currSegment, p1, p2);
+        this.drawSegment(
+          currSegment,
+          prevSegment.point.screen,
+          currSegment.point.screen
+          // currSegment === playerSegment
+        );
       }
     }
 
     this.texture.clear();
-
-    const player = this.scene.player;
-    if (!player) return;
 
     this.texture.draw(
       player.sprite,
@@ -169,7 +183,12 @@ export class Circuit {
     );
   }
 
-  drawSegment(segment: Segment, p1: ScreenCoords, p2: ScreenCoords) {
+  drawSegment(
+    segment: Segment,
+    p1: ScreenCoords,
+    p2: ScreenCoords,
+    isBase?: boolean
+  ) {
     // draw grass
     this.graphics.fillStyle(segment.color.grass, 1);
     this.graphics.fillRect(0, p2.y, SCREEN.W, p1.y - p2.y);
@@ -184,7 +203,7 @@ export class Circuit {
       p2.y,
       p2.x - p2.w,
       p2.y,
-      segment.color.road
+      isBase ? 0xff99cc : segment.color.road
     );
 
     // draw rumble strips
