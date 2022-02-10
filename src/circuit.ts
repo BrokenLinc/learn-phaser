@@ -40,10 +40,10 @@ export class Circuit {
     this.graphics = scene.add.graphics();
     this.texture = scene.add.renderTexture(0, 0, SCREEN.W, SCREEN.H);
     this.segments = [];
-    this.segmentLength = 100;
-    this.total_segments = 300;
-    this.visible_segments = 300;
-    this.rumble_segments = 5;
+    this.segmentLength = 50;
+    this.total_segments = 600;
+    this.visible_segments = 600;
+    this.rumble_segments = 10;
     this.roadLanes = 3;
     this.roadWidth = 1000;
     this.roadLength = 0;
@@ -83,12 +83,12 @@ export class Circuit {
       point: {
         world: {
           x: 0,
-          y: Math.sin((n / this.total_segments) * 10 * Math.PI * 2) * 300,
+          y: 0, //Math.sin((n / this.total_segments) * 9 * Math.PI * 2) * 300,
           z: n * this.segmentLength,
         },
         screen: { x: 0, y: 0, w: 0, h: 0 },
         scale: -1,
-        turn: 0, //Math.sin((n / this.total_segments) * Math.PI * 2) * 5,
+        turn: Math.sin((n / this.total_segments) * Math.PI * 2) * 5,
       },
       color:
         Math.floor(n / this.rumble_segments) % 2
@@ -134,8 +134,11 @@ export class Circuit {
     if (!camera || !player) return;
 
     const baseSegment = this.getSegment(camera.z);
+    const fractionOfSegmentTravelled =
+      (camera.z - baseSegment.point.world.z) / this.segmentLength;
+    console.log(fractionOfSegmentTravelled);
     const baseIndex = baseSegment?.index;
-    const playerSegment = this.getSegment(player.z);
+    // const playerSegment = this.getSegment(player.z);
 
     let turn = 0;
     let offset = 0;
@@ -143,6 +146,8 @@ export class Circuit {
     for (let n = 0; n < this.visible_segments; n += 1) {
       const currIndex = (baseIndex + n) % this.total_segments;
       const currSegment = this.segments[currIndex];
+      const prevIndex = currIndex > 0 ? currIndex - 1 : this.total_segments - 1;
+      const prevSegment = this.segments[prevIndex];
 
       // get the camera offset-Z to loop back the road
       const offsetZ = currIndex < baseIndex ? this.roadLength : 0;
@@ -150,9 +155,20 @@ export class Circuit {
       this.project3D(currSegment.point, camera, offsetZ);
 
       turn += currSegment.point.turn;
+
+      // bad
+      // turn +=
+      //   currSegment.point.turn * fractionOfSegmentTravelled +
+      //   prevSegment.point.turn * (1 - fractionOfSegmentTravelled);
+
       offset += turn;
 
-      currSegment.point.screen.x += offset * currSegment.point.scale * 1000;
+      // smooth it between segments (not perfect)
+      const scale =
+        currSegment.point.scale * fractionOfSegmentTravelled +
+        prevSegment.point.scale * (1 - fractionOfSegmentTravelled);
+
+      currSegment.point.screen.x += offset * scale * 1000;
     }
 
     for (let n = this.visible_segments - 1; n >= 0; n -= 1) {

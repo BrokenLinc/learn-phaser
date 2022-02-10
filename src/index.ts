@@ -22,6 +22,7 @@ export class MainScene extends Phaser.Scene {
   circuit?: Circuit;
   settings?: Settings;
   sprites?: Record<SPRITE_KEY, Phaser.GameObjects.Image>;
+  cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
 
   constructor() {
     super({ key: SCENE.MAIN });
@@ -46,6 +47,8 @@ export class MainScene extends Phaser.Scene {
     this.player = new Player(this);
     this.camera = new Camera(this);
     this.settings = new Settings(this);
+
+    this.cursors = this.input.keyboard.createCursorKeys();
 
     this.input.keyboard.on(KEYDOWN.P, () => {
       if (this.settings) this.settings.txtPause.text = '[P] Resume';
