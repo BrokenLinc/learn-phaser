@@ -83,7 +83,7 @@ export class Circuit {
       point: {
         world: {
           x: 0,
-          y: 0, //Math.sin((n / this.total_segments) * 9 * Math.PI * 2) * 300,
+          y: Math.sin((n / this.total_segments) * 1 * Math.PI * 2) * 5000,
           z: n * this.segmentLength,
         },
         screen: { x: 0, y: 0, w: 0, h: 0 },
@@ -106,9 +106,9 @@ export class Circuit {
     return this.segments[index];
   }
 
-  project3D(point: Point, camera: Camera, offsetZ: number) {
+  project3D(point: Point, camera: Camera, offsetZ: number, offsetX: number) {
     // translate world coordinates to camera coordinates
-    const transX = point.world.x - camera.x;
+    const transX = point.world.x - camera.x + offsetX;
     const transY = point.world.y - camera.y;
     const transZ = point.world.z - camera.z + offsetZ;
 
@@ -134,41 +134,71 @@ export class Circuit {
     if (!camera || !player) return;
 
     const baseSegment = this.getSegment(camera.z);
-    const fractionOfSegmentTravelled =
-      (camera.z - baseSegment.point.world.z) / this.segmentLength;
-    console.log(fractionOfSegmentTravelled);
+    // const fractionOfSegmentTravelled =
+    //   (camera.z - baseSegment.point.world.z) / this.segmentLength;
+    // console.log(fractionOfSegmentTravelled);
     const baseIndex = baseSegment?.index;
-    // const playerSegment = this.getSegment(player.z);
+    const playerSegment = this.getSegment(player.z);
+    const fractionOfSegmentTravelled =
+      (player.z - playerSegment.point.world.z) / this.segmentLength;
+    const playerIndex = playerSegment?.index;
+    const playerNextIndex =
+      playerIndex < this.total_segments - 1 ? playerIndex + 1 : 0;
+    const playerNextSegment = this.segments[playerNextIndex];
+    const playerTurn =
+      playerSegment.point.turn * (1 - fractionOfSegmentTravelled) +
+      playerNextSegment.point.turn * fractionOfSegmentTravelled;
 
+    // console.log(playerTurn);
+
+    let playerSegmentFound = false;
     let turn = 0;
-    let offset = 0;
+    let offsetX = 0;
 
     for (let n = 0; n < this.visible_segments; n += 1) {
       const currIndex = (baseIndex + n) % this.total_segments;
       const currSegment = this.segments[currIndex];
-      const prevIndex = currIndex > 0 ? currIndex - 1 : this.total_segments - 1;
-      const prevSegment = this.segments[prevIndex];
+      const nextIndex = currIndex < this.total_segments - 1 ? currIndex + 1 : 0;
+      const nextSegment = this.segments[nextIndex];
 
       // get the camera offset-Z to loop back the road
       const offsetZ = currIndex < baseIndex ? this.roadLength : 0;
 
-      this.project3D(currSegment.point, camera, offsetZ);
+      if (playerSegmentFound) {
+        const currentTurn =
+          (currSegment.point.turn * (1 - fractionOfSegmentTravelled) || 0) +
+          (nextSegment.point.turn * fractionOfSegmentTravelled || 0);
 
-      turn += currSegment.point.turn;
+        // if (playerSegment.index === currSegment.index) {
+        //   console.log(currentTurn);
+        // }
 
-      // bad
-      // turn +=
-      //   currSegment.point.turn * fractionOfSegmentTravelled +
-      //   prevSegment.point.turn * (1 - fractionOfSegmentTravelled);
+        turn += currentTurn - playerTurn;
+        offsetX += turn;
+      }
+      if (currIndex === playerIndex) {
+        playerSegmentFound = true;
+      }
 
-      offset += turn;
+      // const trundle =
+      //   (currSegment.point.turn * fractionOfSegmentTravelled || 0) +
+      //   (prevSegment.point.turn * (1 - fractionOfSegmentTravelled) || 0);
+      // if (playerIndex === currIndex) {
+      //   console.log(trundle);
+      // }
 
-      // smooth it between segments (not perfect)
-      const scale =
-        currSegment.point.scale * fractionOfSegmentTravelled +
-        prevSegment.point.scale * (1 - fractionOfSegmentTravelled);
+      // if (playerIndex === currIndex) {
+      // console.log({ currSegment });
+      // }
 
-      currSegment.point.screen.x += offset * scale * 1000;
+      // const j =
+      //   (currSegment.point.world.z * fractionOfSegmentTravelled || 0) +
+      //   ((currSegment.point.world.z - this.segmentLength) *
+      //     (1 - fractionOfSegmentTravelled) || 0);
+
+      // const trundle = offsetX;
+
+      this.project3D(currSegment.point, camera, offsetZ, offsetX);
     }
 
     for (let n = this.visible_segments - 1; n >= 0; n -= 1) {

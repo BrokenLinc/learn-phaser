@@ -98,15 +98,16 @@ export class Player {
       this.x += 0.05;
     }
 
-    // rises & jumps
-    const newY = Math.max(
-      this.y + this.dy - GRAVITY,
-      playerSegment.point.world.y // TODO: FIX: determine slope
-    );
-    this.dy = newY - this.y;
-    this.y = newY;
-    this.touchingGround = this.y <= playerSegment.point.world.y;
+    this.y = playerSegment.point.world.y;
 
-    this.sprite.alpha = this.touchingGround ? 1 : 0.5;
+    // rises & jumps
+    // const newY = Math.max(
+    //   this.y + this.dy - GRAVITY,
+    //   playerSegment.point.world.y // TODO: FIX: determine slope
+    // );
+    // this.dy = newY - this.y;
+    // this.y = newY;
+    // this.touchingGround = this.y <= playerSegment.point.world.y;
+    // this.sprite.alpha = this.touchingGround ? 1 : 0.5;
   }
 }
