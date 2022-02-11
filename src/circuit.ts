@@ -40,10 +40,10 @@ export class Circuit {
     this.graphics = scene.add.graphics();
     this.texture = scene.add.renderTexture(0, 0, SCREEN.W, SCREEN.H);
     this.segments = [];
-    this.segmentLength = 50;
-    this.total_segments = 600;
-    this.visible_segments = 600;
-    this.rumble_segments = 10;
+    this.segmentLength = 100;
+    this.total_segments = 300;
+    this.visible_segments = 300;
+    this.rumble_segments = 5;
     this.roadLanes = 3;
     this.roadWidth = 1000;
     this.roadLength = 0;
@@ -83,7 +83,7 @@ export class Circuit {
       point: {
         world: {
           x: 0,
-          y: Math.sin((n / this.total_segments) * 1 * Math.PI * 2) * 5000,
+          y: 0, //Math.sin((n / this.total_segments) * 1 * Math.PI * 2) * 5000,
           z: n * this.segmentLength,
         },
         screen: { x: 0, y: 0, w: 0, h: 0 },
@@ -158,45 +158,18 @@ export class Circuit {
     for (let n = 0; n < this.visible_segments; n += 1) {
       const currIndex = (baseIndex + n) % this.total_segments;
       const currSegment = this.segments[currIndex];
-      const nextIndex = currIndex < this.total_segments - 1 ? currIndex + 1 : 0;
-      const nextSegment = this.segments[nextIndex];
 
       // get the camera offset-Z to loop back the road
       const offsetZ = currIndex < baseIndex ? this.roadLength : 0;
 
+      // bend road only after the player segment
       if (playerSegmentFound) {
-        const currentTurn =
-          (currSegment.point.turn * (1 - fractionOfSegmentTravelled) || 0) +
-          (nextSegment.point.turn * fractionOfSegmentTravelled || 0);
-
-        // if (playerSegment.index === currSegment.index) {
-        //   console.log(currentTurn);
-        // }
-
-        turn += currentTurn - playerTurn;
+        turn += currSegment.point.turn - playerTurn;
         offsetX += turn;
       }
       if (currIndex === playerIndex) {
         playerSegmentFound = true;
       }
-
-      // const trundle =
-      //   (currSegment.point.turn * fractionOfSegmentTravelled || 0) +
-      //   (prevSegment.point.turn * (1 - fractionOfSegmentTravelled) || 0);
-      // if (playerIndex === currIndex) {
-      //   console.log(trundle);
-      // }
-
-      // if (playerIndex === currIndex) {
-      // console.log({ currSegment });
-      // }
-
-      // const j =
-      //   (currSegment.point.world.z * fractionOfSegmentTravelled || 0) +
-      //   ((currSegment.point.world.z - this.segmentLength) *
-      //     (1 - fractionOfSegmentTravelled) || 0);
-
-      // const trundle = offsetX;
 
       this.project3D(currSegment.point, camera, offsetZ, offsetX);
     }

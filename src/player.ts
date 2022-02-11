@@ -73,6 +73,11 @@ export class Player {
         if (cursors.up.isDown) {
           this.speed += (segmentMaxSpeed - this.speed) * 0.02;
         }
+        // brake
+        // TODO: halt under lowest speed
+        if (cursors.down.isDown) {
+          this.speed *= 0.97;
+        }
       }
     }
 
@@ -86,16 +91,21 @@ export class Player {
     }
 
     const playerSegment = circuit.getSegment(this.z);
+    const playerIndex = playerSegment.index;
+    const nextIndex =
+      playerIndex < circuit.total_segments - 1 ? playerIndex + 1 : 0;
+    const nextSegment = circuit.segments[nextIndex];
+    const turn = nextSegment.point.turn - playerSegment.point.turn;
 
     // turn drift
-    // this.x += playerSegment.point.turn * -0.008; // TODO: FIX: adjust factor by speed
+    this.x += turn * -0.00004 * this.speed; // TODO: FIX: adjust factor by speed
 
     // steering
     if (cursors.left.isDown) {
-      this.x += -0.05;
+      this.x += -0.03;
     }
     if (cursors.right.isDown) {
-      this.x += 0.05;
+      this.x += 0.03;
     }
 
     this.y = playerSegment.point.world.y;
