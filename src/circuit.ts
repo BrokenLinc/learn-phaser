@@ -70,7 +70,7 @@ export class Circuit {
   }
 
   createSection(nSegments: number) {
-    for (var i = 0; i < nSegments; i += 1) {
+    for (let i = 0; i < nSegments; i += 1) {
       this.createSegment();
     }
   }
@@ -83,7 +83,7 @@ export class Circuit {
       point: {
         world: {
           x: 0,
-          y: 0, //Math.sin((n / this.total_segments) * 1 * Math.PI * 2) * 5000,
+          y: Math.sin((n / this.total_segments) * 2 * Math.PI * 2) * 3000,
           z: n * this.segmentLength,
         },
         screen: { x: 0, y: 0, w: 0, h: 0 },
@@ -134,8 +134,6 @@ export class Circuit {
     if (!camera || !player) return;
 
     const baseSegment = this.getSegment(camera.z);
-    // const fractionOfSegmentTravelled =
-    //   (camera.z - baseSegment.point.world.z) / this.segmentLength;
     // console.log(fractionOfSegmentTravelled);
     const baseIndex = baseSegment?.index;
     const playerSegment = this.getSegment(player.z);
@@ -222,7 +220,7 @@ export class Circuit {
       p2.y,
       p2.x - p2.w,
       p2.y,
-      isBase ? 0xff99cc : segment.color.road
+      isBase ? 0xff_99_cc : segment.color.road
     );
 
     // draw rumble strips
