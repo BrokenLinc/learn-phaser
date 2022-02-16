@@ -67,7 +67,7 @@ export class Player {
 
     const pos = circuit.getPositionals();
     if (!pos) return;
-    const { playerTurn, groundY } = pos;
+    const { drift, groundY } = pos;
 
     // speed modifiers
     if (this.touchingGround) {
@@ -102,7 +102,7 @@ export class Player {
     }
 
     // turn drift
-    this.x += ((playerTurn * DRIFT_FACTOR) / -1000) * this.speed;
+    this.x += ((drift * DRIFT_FACTOR) / -1000) * this.speed;
 
     // steering
     if (cursors.left.isDown) {

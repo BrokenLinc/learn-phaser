@@ -140,13 +140,17 @@ export class Circuit {
       playerIndex < this.total_segments - 1 ? playerIndex + 1 : 0;
     const nextSegment = this.segments[nextIndex];
 
-    const playerTurn = nextSegment.point.turn - playerSegment.point.turn;
+    const playerTurn =
+      playerSegment.point.turn * (1 - fractionOfSegmentTravelled) +
+      nextSegment.point.turn * fractionOfSegmentTravelled;
+    const drift = nextSegment.point.turn - playerSegment.point.turn;
     const groundY =
       playerSegment.point.world.y * (1 - fractionOfSegmentTravelled) +
       nextSegment.point.world.y * fractionOfSegmentTravelled;
 
     return {
       baseIndex,
+      drift,
       groundY,
       playerIndex,
       playerTurn,
