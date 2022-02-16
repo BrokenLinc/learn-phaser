@@ -6,10 +6,10 @@ import {
   KEYDOWN,
   SCENE,
   SCREEN,
-  STATE,
   SCREEN_CENTER,
   SPRITE_KEY,
-} from './types';
+  STATE,
+} from './constants';
 import { Camera } from './camera';
 import { Circuit } from './circuit';
 import { Settings } from './settings';

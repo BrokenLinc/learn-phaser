@@ -1,12 +1,16 @@
-import { ScreenCoords, SCREEN, SCREEN_CENTER } from './types';
+import { ScreenCoords } from './types';
+import {
+  BRAKING_POWER,
+  DRIFT_FACTOR,
+  FRICTION_POWER,
+  GAS_POWER,
+  GRAVITY,
+  SCREEN,
+  SCREEN_CENTER,
+  SEGMENT_LENGTH,
+  STEERING_POWER,
+} from './constants';
 import { MainScene } from './index';
-
-const GRAVITY = 4;
-const STEERING_POWER = 0.03;
-const BRAKING_POWER = 0.03;
-const GAS_POWER = 0.02;
-const FRICTION_POWER = 0.2;
-const DRIFT_FACTOR = 0.04;
 export class Player {
   scene: MainScene;
   x: number;
@@ -38,10 +42,8 @@ export class Player {
     this.screenCoords = { x: 0, y: 0, w: 0, h: 0 };
 
     // avoid moving more than 1 segment per frame, at 60fps
-    this.maxSpeed = (scene.circuit?.segmentLength ?? 0) / (1 / 60);
-
+    this.maxSpeed = SEGMENT_LENGTH * 60;
     this.speed = 0;
-
     this.touchingGround = true;
   }
 
@@ -57,13 +59,15 @@ export class Player {
     this.x = 0;
     this.y = 0;
     this.z = 0;
-
-    // this.speed = this.maxSpeed;
   }
 
   update(dt: number) {
     const { circuit, cursors } = this.scene;
     if (!circuit || !cursors) return;
+
+    const pos = circuit.getPositionals();
+    if (!pos) return;
+    const { playerTurn, groundY } = pos;
 
     // speed modifiers
     if (this.touchingGround) {
@@ -97,21 +101,8 @@ export class Player {
       this.z -= circuit.roadLength;
     }
 
-    // TODO: move playerturn/playerground to circuit, read into camera and player
-    const playerSegment = circuit.getSegment(this.z);
-    const fractionOfSegmentTravelled =
-      (this.z - playerSegment.point.world.z) / circuit.segmentLength;
-    const playerIndex = playerSegment.index;
-    const nextIndex =
-      playerIndex < circuit.total_segments - 1 ? playerIndex + 1 : 0;
-    const nextSegment = circuit.segments[nextIndex];
-    const turn = nextSegment.point.turn - playerSegment.point.turn;
-    const groundY =
-      playerSegment.point.world.y * (1 - fractionOfSegmentTravelled) +
-      nextSegment.point.world.y * fractionOfSegmentTravelled;
-
     // turn drift
-    this.x += ((turn * DRIFT_FACTOR) / -1000) * this.speed;
+    this.x += ((playerTurn * DRIFT_FACTOR) / -1000) * this.speed;
 
     // steering
     if (cursors.left.isDown) {
@@ -120,8 +111,6 @@ export class Player {
     if (cursors.right.isDown) {
       this.x += STEERING_POWER;
     }
-
-    // this.y = groundY;
 
     // rises & jumps
     const newY = Math.max(this.y + this.dy - GRAVITY, groundY);

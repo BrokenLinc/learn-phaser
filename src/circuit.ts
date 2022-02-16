@@ -1,17 +1,20 @@
+import { Point, ScreenCoords, Segment, SegmentColor } from './types';
 import {
   COLOR,
-  Point,
   SCREEN,
   SCREEN_CENTER,
-  ScreenCoords,
-  Segment,
-  SegmentColor,
-} from './types';
+  SEGMENT_LENGTH,
+  VISIBLE_SEGMENTS,
+} from './constants';
 import { MainScene } from './index';
 import { Camera } from './camera';
 
 const SEGMENT_COLOR: Record<string, SegmentColor> = {
-  LIGHT: { road: COLOR.gray, grass: COLOR.green, rumble: COLOR.red },
+  LIGHT: {
+    road: COLOR.gray,
+    grass: COLOR.green,
+    rumble: COLOR.red,
+  },
   DARK: {
     road: COLOR.darkgray,
     grass: COLOR.darkgreen,
@@ -23,9 +26,7 @@ const SEGMENT_COLOR: Record<string, SegmentColor> = {
 export class Circuit {
   scene: MainScene;
   segments: Segment[];
-  segmentLength: number;
   total_segments: number;
-  visible_segments: number;
   rumble_segments: number;
   roadLanes: number;
   roadWidth: number;
@@ -40,9 +41,7 @@ export class Circuit {
     this.graphics = scene.add.graphics();
     this.texture = scene.add.renderTexture(0, 0, SCREEN.W, SCREEN.H);
     this.segments = [];
-    this.segmentLength = 100;
     this.total_segments = 300;
-    this.visible_segments = 300;
     this.rumble_segments = 5;
     this.roadLanes = 3;
     this.roadWidth = 1000;
@@ -62,7 +61,7 @@ export class Circuit {
       this.segments[this.segments.length - 1 - n].color.road = COLOR.charcoal;
     }
 
-    this.roadLength = this.total_segments * this.segmentLength;
+    this.roadLength = this.total_segments * SEGMENT_LENGTH;
   }
 
   createRoad() {
@@ -84,7 +83,7 @@ export class Circuit {
         world: {
           x: 0,
           y: Math.sin((n / this.total_segments) * 2 * Math.PI * 2) * 3000,
-          z: n * this.segmentLength,
+          z: n * SEGMENT_LENGTH,
         },
         screen: { x: 0, y: 0, w: 0, h: 0 },
         scale: -1,
@@ -102,7 +101,7 @@ export class Circuit {
     if (z < 0) {
       z += this.roadLength;
     }
-    const index = Math.floor(z / this.segmentLength) % this.total_segments;
+    const index = Math.floor(z / SEGMENT_LENGTH) % this.total_segments;
     return this.segments[index];
   }
 
@@ -126,6 +125,34 @@ export class Circuit {
     point.screen.w = Math.round(projectedW * SCREEN_CENTER.X);
   }
 
+  getPositionals() {
+    const camera = this.scene.camera;
+    const player = this.scene.player;
+    if (!camera || !player) return null;
+
+    const baseSegment = this.getSegment(camera.z);
+    const baseIndex = baseSegment?.index;
+    const playerSegment = this.getSegment(player.z);
+    const fractionOfSegmentTravelled =
+      (player.z - playerSegment.point.world.z) / SEGMENT_LENGTH;
+    const playerIndex = playerSegment.index;
+    const nextIndex =
+      playerIndex < this.total_segments - 1 ? playerIndex + 1 : 0;
+    const nextSegment = this.segments[nextIndex];
+
+    const playerTurn = nextSegment.point.turn - playerSegment.point.turn;
+    const groundY =
+      playerSegment.point.world.y * (1 - fractionOfSegmentTravelled) +
+      nextSegment.point.world.y * fractionOfSegmentTravelled;
+
+    return {
+      baseIndex,
+      groundY,
+      playerIndex,
+      playerTurn,
+    };
+  }
+
   render3D() {
     this.graphics.clear();
 
@@ -133,27 +160,15 @@ export class Circuit {
     const player = this.scene.player;
     if (!camera || !player) return;
 
-    const baseSegment = this.getSegment(camera.z);
-    // console.log(fractionOfSegmentTravelled);
-    const baseIndex = baseSegment?.index;
-    const playerSegment = this.getSegment(player.z);
-    const fractionOfSegmentTravelled =
-      (player.z - playerSegment.point.world.z) / this.segmentLength;
-    const playerIndex = playerSegment?.index;
-    const playerNextIndex =
-      playerIndex < this.total_segments - 1 ? playerIndex + 1 : 0;
-    const playerNextSegment = this.segments[playerNextIndex];
-    const playerTurn =
-      playerSegment.point.turn * (1 - fractionOfSegmentTravelled) +
-      playerNextSegment.point.turn * fractionOfSegmentTravelled;
-
-    // console.log(playerTurn);
+    const pos = this.getPositionals();
+    if (!pos) return;
+    const { baseIndex, playerTurn, playerIndex } = pos;
 
     let playerSegmentFound = false;
     let turn = 0;
     let offsetX = 0;
 
-    for (let n = 0; n < this.visible_segments; n += 1) {
+    for (let n = 0; n < VISIBLE_SEGMENTS; n += 1) {
       const currIndex = (baseIndex + n) % this.total_segments;
       const currSegment = this.segments[currIndex];
 
@@ -172,7 +187,7 @@ export class Circuit {
       this.project3D(currSegment.point, camera, offsetZ, offsetX);
     }
 
-    for (let n = this.visible_segments - 1; n >= 0; n -= 1) {
+    for (let n = VISIBLE_SEGMENTS - 1; n >= 0; n -= 1) {
       const currIndex = (baseIndex + n) % this.total_segments;
       const currSegment = this.segments[currIndex];
       const prevIndex = currIndex > 0 ? currIndex - 1 : this.total_segments - 1;
@@ -186,7 +201,6 @@ export class Circuit {
           currSegment,
           prevSegment.point.screen,
           currSegment.point.screen
-          // currSegment === playerSegment
         );
       }
     }
