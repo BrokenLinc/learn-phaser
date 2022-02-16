@@ -102,7 +102,7 @@ export class Player {
     }
 
     // turn drift
-    this.x += ((playerTurn * DRIFT_FACTOR) / -1000) * this.speed;
+    this.x += ((playerTurn * DRIFT_FACTOR) / -20_000) * this.speed;
 
     // steering
     if (cursors.left.isDown) {
