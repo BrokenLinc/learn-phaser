@@ -1,27 +1,11 @@
-import { Segment, SegmentColor } from './types';
-import { COLOR, SCREEN, SEGMENT_LENGTH, VISIBLE_SEGMENTS } from './constants';
+import { Segment } from './types';
+import { SCREEN, SEGMENT_LENGTH, VISIBLE_SEGMENTS } from './constants';
 import { MainScene } from './index';
 import { drawSegment, project3D } from './drawing';
-
-const SEGMENT_COLOR: Record<string, SegmentColor> = {
-  LIGHT: {
-    road: COLOR.gray,
-    grass: COLOR.green,
-    rumble: COLOR.red,
-  },
-  DARK: {
-    road: COLOR.darkgray,
-    grass: COLOR.darkgreen,
-    rumble: COLOR.almostwhite,
-    lane: COLOR.almostwhite,
-  },
-};
-
+import { createRoad } from './tracks';
 export class Circuit {
   scene: MainScene;
   segments: Segment[];
-  total_segments: number;
-  // rumble_segments: number;
   roadLanes: number;
   roadWidth: number;
   roadLength: number;
@@ -35,8 +19,6 @@ export class Circuit {
     this.graphics = scene.add.graphics();
     this.texture = scene.add.renderTexture(0, 0, SCREEN.W, SCREEN.H);
     this.segments = [];
-    this.total_segments = 300;
-    // this.rumble_segments = 5;
     this.roadLanes = 3;
     this.roadWidth = 1000;
     this.roadLength = 0;
@@ -44,50 +26,8 @@ export class Circuit {
   }
 
   create() {
-    this.segments = [];
-
-    this.createRoad();
-
-    // for (let n = 0; n < this.rumble_segments; n += 1) {
-    //   // start zone
-    //   this.segments[n].color.road = COLOR.white;
-    //   // finish zone
-    //   this.segments[this.segments.length - 1 - n].color.road = COLOR.charcoal;
-    // }
-
-    this.roadLength = this.total_segments * SEGMENT_LENGTH;
-  }
-
-  createRoad() {
-    this.createSection(this.total_segments);
-  }
-
-  createSection(nSegments: number) {
-    for (let i = 0; i < nSegments; i += 1) {
-      this.createSegment();
-    }
-  }
-
-  createSegment() {
-    const n = this.segments.length;
-
-    this.segments.push({
-      index: n,
-      point: {
-        world: {
-          x: 0,
-          y: Math.sin((n / this.total_segments) * 2 * Math.PI * 2) * 3000,
-          z: n * SEGMENT_LENGTH,
-        },
-        screen: { x: 0, y: 0, w: 0, h: 0 },
-        scale: -1,
-        turn: Math.sin((n / this.total_segments) * Math.PI * 2) * 5,
-      },
-      color:
-        Math.floor(n / 5) % 2
-          ? { ...SEGMENT_COLOR.DARK }
-          : { ...SEGMENT_COLOR.LIGHT },
-    });
+    this.segments = createRoad();
+    this.roadLength = this.segments.length * SEGMENT_LENGTH;
   }
 
   getSegment(positionZ: number) {
@@ -95,7 +35,7 @@ export class Circuit {
     if (z < 0) {
       z += this.roadLength;
     }
-    const index = Math.floor(z / SEGMENT_LENGTH) % this.total_segments;
+    const index = Math.floor(z / SEGMENT_LENGTH) % this.segments.length;
     return this.segments[index];
   }
 
@@ -111,7 +51,7 @@ export class Circuit {
       (player.z - playerSegment.point.world.z) / SEGMENT_LENGTH;
     const playerIndex = playerSegment.index;
     const nextIndex =
-      playerIndex < this.total_segments - 1 ? playerIndex + 1 : 0;
+      playerIndex < this.segments.length - 1 ? playerIndex + 1 : 0;
     const nextSegment = this.segments[nextIndex];
 
     const playerTurn = playerSegment.point.turn;
@@ -145,7 +85,7 @@ export class Circuit {
     let offsetX = 0;
 
     for (let n = 0; n < VISIBLE_SEGMENTS; n += 1) {
-      const currIndex = (baseIndex + n) % this.total_segments;
+      const currIndex = (baseIndex + n) % this.segments.length;
       const currSegment = this.segments[currIndex];
 
       // get the camera offset-Z to loop back the road
@@ -164,9 +104,10 @@ export class Circuit {
     }
 
     for (let n = VISIBLE_SEGMENTS - 1; n >= 0; n -= 1) {
-      const currIndex = (baseIndex + n) % this.total_segments;
+      const currIndex = (baseIndex + n) % this.segments.length;
       const currSegment = this.segments[currIndex];
-      const prevIndex = currIndex > 0 ? currIndex - 1 : this.total_segments - 1;
+      const prevIndex =
+        currIndex > 0 ? currIndex - 1 : this.segments.length - 1;
       const prevSegment = this.segments[prevIndex];
 
       // draw this segment only if it is above the clipping bottom line
