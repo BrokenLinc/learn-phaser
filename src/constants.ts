@@ -3,7 +3,7 @@ export const STEERING_POWER = 0.03;
 export const BRAKING_POWER = 0.03;
 export const GAS_POWER = 0.02;
 export const FRICTION_POWER = 0.2;
-export const DRIFT_FACTOR = 0.04;
+export const DRIFT_FACTOR = 0.05;
 export const SEGMENT_LENGTH = 100;
 export const VISIBLE_SEGMENTS = 300;
 

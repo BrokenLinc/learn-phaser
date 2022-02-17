@@ -54,7 +54,9 @@ export class Circuit {
       playerIndex < this.segments.length - 1 ? playerIndex + 1 : 0;
     const nextSegment = this.segments[nextIndex];
 
-    const playerSegmentTurn = playerSegment.point.turn;
+    const playerTurn =
+      playerSegment.point.turn * (1 - fractionOfSegmentTravelled) +
+      nextSegment.point.turn * fractionOfSegmentTravelled;
     const nextSegmentTurnDiff =
       nextSegment.point.turn - playerSegment.point.turn;
     const groundY =
@@ -66,7 +68,7 @@ export class Circuit {
       groundY,
       nextSegmentTurnDiff,
       playerIndex,
-      playerSegmentTurn,
+      playerTurn,
     };
   }
 
@@ -79,7 +81,7 @@ export class Circuit {
 
     const pos = this.getPositionals();
     if (!pos) return;
-    const { baseIndex, nextSegmentTurnDiff, playerIndex } = pos;
+    const { baseIndex, playerTurn, playerIndex } = pos;
 
     let playerSegmentFound = false;
     let turn = 0;
@@ -94,7 +96,7 @@ export class Circuit {
 
       // bend road only after the player segment
       if (playerSegmentFound) {
-        turn += currSegment.point.turn - nextSegmentTurnDiff;
+        turn += currSegment.point.turn - playerTurn;
         offsetX += turn;
       }
       if (currIndex === playerIndex) {
