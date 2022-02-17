@@ -116,7 +116,7 @@ export class Player {
     const newY = Math.max(this.y + this.dy - GRAVITY, groundY);
     this.dy = newY - this.y;
     this.y = newY;
-    this.touchingGround = this.y <= groundY;
+    this.touchingGround = this.y === groundY;
     this.sprite.alpha = this.touchingGround ? 1 : 0.5;
   }
 }
