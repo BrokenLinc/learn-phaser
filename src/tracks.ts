@@ -1,69 +1,86 @@
+import _ from 'lodash';
+
 import { Segment, SegmentColor } from './types';
 import { COLOR, SEGMENT_LENGTH } from './constants';
 
 const SEGMENT_COLOR: Record<string, SegmentColor> = {
   LIGHT: {
-    road: COLOR.gray,
-    grass: COLOR.green,
-    rumble: COLOR.red,
+    road: COLOR.charcoal,
+    underRoad: COLOR.charcoal,
+    grass: COLOR.black,
+    rumble: COLOR.teal,
   },
   DARK: {
-    road: COLOR.darkgray,
-    grass: COLOR.darkgreen,
-    rumble: COLOR.almostwhite,
-    lane: COLOR.almostwhite,
+    road: COLOR.charcoal,
+    underRoad: COLOR.charcoal,
+    grass: COLOR.black,
+    rumble: COLOR.teal,
+    lane: COLOR.gray,
   },
 };
 
+type SlopeConfig = [number, number][];
+type TurnConfig = [number, number][];
+
 export const createRoad = () => {
-  const length = 1000;
-  const segments = createSection(length);
-
-  // modify segments
-
-  // TODO: map configs to add calls
-  const slopeConfig = [
+  const slopeConfig: SlopeConfig = [
     [0, 0],
-    [50, 30],
-    [100, 60],
+    [100, 120],
     [200, 0],
+    [300, -100],
+    [400, 20],
+    [500, 100],
+    [600, -30],
+    [700, 90],
+    [800, -10],
+    [900, 40],
+    [1000, 0],
   ];
-  const turnConfig = [
+  const turnConfig: TurnConfig = [
     [0, 0],
     [100, 5],
     [200, 0],
+    [300, -5],
+    [400, 0],
+    [500, 2],
+    [600, 0],
+    [700, -8],
+    [800, 0],
+    [900, 3],
+    [1000, 0],
   ];
+  return createRoadWithConfigs(1000, slopeConfig, turnConfig);
+};
 
-  addSlope(segments, {
-    start: 0,
-    end: 50,
-    startElevation: 0,
-    endElevation: 30,
-  });
-  addSlope(segments, {
-    start: 50,
-    end: 100,
-    startElevation: 30,
-    endElevation: 60,
-  });
-  addSlope(segments, {
-    start: 100,
-    end: 200,
-    startElevation: 60,
-    endElevation: 0,
-  });
+export const createRoadWithConfigs = (
+  length: number,
+  slopeConfig: SlopeConfig,
+  turnConfig: TurnConfig
+) => {
+  const segments = createSection(length);
 
-  addTurn(segments, {
-    start: 0,
-    end: 100,
-    startTurn: 0,
-    endTurn: 5,
+  // modify segments
+  slopeConfig.forEach(([end, endElevation], i) => {
+    if (i === 0) return;
+
+    const [start, startElevation] = slopeConfig[i - 1];
+    addSlope(segments, {
+      start,
+      end,
+      startElevation,
+      endElevation,
+    });
   });
-  addTurn(segments, {
-    start: 100,
-    end: 200,
-    startTurn: 5,
-    endTurn: 0,
+  turnConfig.forEach(([end, endTurn], i) => {
+    if (i === 0) return;
+
+    const [start, startTurn] = turnConfig[i - 1];
+    addTurn(segments, {
+      start,
+      end,
+      startTurn,
+      endTurn,
+    });
   });
 
   return segments;

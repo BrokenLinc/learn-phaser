@@ -20,6 +20,7 @@ export interface Point {
 
 export interface SegmentColor {
   road: number;
+  underRoad: number;
   grass: number;
   rumble: number;
   lane?: number;

@@ -21,7 +21,7 @@ export class MainScene extends Phaser.Scene {
   player?: Player;
   circuit?: Circuit;
   settings?: Settings;
-  sprites?: Record<SPRITE_KEY, Phaser.GameObjects.Image>;
+  sprites?: Partial<Record<SPRITE_KEY, Phaser.GameObjects.Image>>;
   cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
 
   constructor() {
@@ -29,18 +29,24 @@ export class MainScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image(SPRITE_KEY.background, './assets/img_back.png');
+    // this.load.image(SPRITE_KEY.background, './assets/img_back.png');
     this.load.image(SPRITE_KEY.playerCar, './assets/img_player.png');
+    this.load.image(SPRITE_KEY.rider, './assets/img_rider.png');
+    this.load.image(SPRITE_KEY.rider_shadow, './assets/img_rider_shadow.png');
   }
 
   create() {
     this.sprites = {
-      background: this.add.image(
-        SCREEN_CENTER.X,
-        SCREEN_CENTER.Y,
-        SPRITE_KEY.background
-      ),
-      playerCar: this.add.image(0, 0, SPRITE_KEY.playerCar).setVisible(false),
+      // background: this.add.image(
+      //   SCREEN_CENTER.X,
+      //   SCREEN_CENTER.Y,
+      //   SPRITE_KEY.background
+      // ),
+      // playerCar: this.add.image(0, 0, SPRITE_KEY.playerCar).setVisible(false),
+      rider_shadow: this.add
+        .image(0, 0, SPRITE_KEY.rider_shadow)
+        .setVisible(false),
+      rider: this.add.image(0, 0, SPRITE_KEY.rider).setVisible(false),
     };
 
     this.circuit = new Circuit(this);

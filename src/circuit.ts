@@ -39,6 +39,7 @@ export class Circuit {
     return this.segments[index];
   }
 
+  // TODO: split into camera and player/enemy/moving-object
   getPositionals() {
     const camera = this.scene.camera;
     const player = this.scene.player;
@@ -46,6 +47,7 @@ export class Circuit {
 
     const baseSegment = this.getSegment(camera.z);
     const baseIndex = baseSegment?.index;
+
     const playerSegment = this.getSegment(player.z);
     const fractionOfSegmentTravelled =
       (player.z - playerSegment.point.world.z) / SEGMENT_LENGTH;
@@ -121,12 +123,21 @@ export class Circuit {
           this.graphics,
           currSegment,
           prevSegment.point.screen,
-          currSegment.point.screen
+          currSegment.point.screen,
+          prevSegment.point.world,
+          currSegment.point.world
+          // currIndex === playerIndex
         );
       }
     }
 
     this.texture.clear();
+
+    this.texture.draw(
+      player.shadowSprite,
+      player.shadowScreenCoords.x,
+      player.shadowScreenCoords.y
+    );
 
     this.texture.draw(
       player.sprite,

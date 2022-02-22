@@ -33,7 +33,7 @@ export class Camera {
 
     // player.x is normalized to [-1, 1], camera must be multiplied
     this.x = player.x * circuit.roadWidth;
-    this.y = player.y + 1000;
+    this.y = player.groundY + 1000;
 
     this.z = player.z - this.distToPlayer;
 
