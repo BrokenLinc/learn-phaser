@@ -1,11 +1,12 @@
-export const GRAVITY = 4.5;
-export const STEERING_POWER = 0.03;
+export const TRACK_RES = 0.7;
 export const BRAKING_POWER = 0.03;
 export const GAS_POWER = 0.02;
 export const FRICTION_POWER = 0.02;
 export const DRIFT_FACTOR = 0.05;
-export const SEGMENT_LENGTH = 100;
-export const VISIBLE_SEGMENTS = 300;
+export const SEGMENT_LENGTH = 100 * TRACK_RES;
+export const VISIBLE_SEGMENTS = Math.ceil(300 / TRACK_RES);
+export const STEERING_POWER = (30 / 1_000) * TRACK_RES;
+export const GRAVITY = 4.5;
 
 export enum COLOR {
   almostwhite = 0xdd_dd_dd,

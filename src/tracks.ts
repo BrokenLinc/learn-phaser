@@ -1,7 +1,7 @@
 import _ from 'lodash';
 
 import { Segment, SegmentColor } from './types';
-import { COLOR, SEGMENT_LENGTH } from './constants';
+import { COLOR, SEGMENT_LENGTH, TRACK_RES } from './constants';
 
 const SEGMENT_COLOR: Record<string, SegmentColor> = {
   LIGHT: {
@@ -52,7 +52,6 @@ export const createRoad = () => {
     [100, 7],
     // [200, 0],
     [300, -7],
-    [400, 12],
     [500, 5],
     // [600, 0],
     [700, -7],
@@ -114,7 +113,9 @@ export const addSlope = (
     const offset = 1;
     const amp = (Math.cos((frac + offset) * Math.PI) + 1) / 2; // eases from 0 to 1
     segments[i].point.world.y =
-      (startElevation + amp * (endElevation - startElevation)) * 100;
+      (startElevation + amp * (endElevation - startElevation)) *
+      100 *
+      TRACK_RES;
   }
 };
 
