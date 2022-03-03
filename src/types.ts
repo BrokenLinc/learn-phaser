@@ -30,4 +30,6 @@ export interface Segment {
   index: number;
   point: Point;
   color: SegmentColor;
+  hash: number;
+  hash2: number;
 }

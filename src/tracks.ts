@@ -152,5 +152,7 @@ export const createSegment = (n: number): Segment => {
       Math.floor(n / 5) % 2
         ? { ...SEGMENT_COLOR.DARK }
         : { ...SEGMENT_COLOR.LIGHT },
+    hash: _.random(0, 1, true),
+    hash2: _.random(0, 1, true),
   };
 };

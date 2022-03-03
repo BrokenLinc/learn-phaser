@@ -106,6 +106,18 @@ export const drawSegment = (
       }
     }
   }
+
+  const px = p2.x + segment.point.scale * 6_000_000 * (segment.hash - 0.5);
+  const py = p2.y + segment.point.scale * -12_000_000 * segment.hash2;
+  // graphics.lineStyle(100000 * segment.point.scale, 0xff_ff_ff);
+
+  // graphics.beginPath();
+  // graphics.moveTo(px, py);
+  // graphics.lineTo(px + 2, py);
+
+  graphics.fillStyle(0xff_ff_ff, 1);
+  graphics.fillCircle(px, py, 10000 * segment.point.scale);
+  graphics.stroke();
 };
 
 export const drawPolygon = (
