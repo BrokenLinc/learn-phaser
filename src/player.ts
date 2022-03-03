@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 import { ScreenCoords } from './types';
 import {
   BRAKING_POWER,
@@ -100,7 +102,7 @@ export class Player {
 
     // speed modifiers
     if (this.touchingGround) {
-      const grassMaxSpeed = this.maxSpeed / 2;
+      const grassMaxSpeed = STEERING_POWER; //STEERING_POWER / 2;
       const segmentMaxSpeed =
         this.x < -1 || this.x > 1 ? grassMaxSpeed : this.maxSpeed;
       if (this.speed > segmentMaxSpeed) {
@@ -147,12 +149,14 @@ export class Player {
     this.x += ((nextSegmentTurnDiff * DRIFT_FACTOR) / -1_000) * this.speed;
 
     // steering
+    const dx = STEERING_POWER; //Math.min(STEERING_POWER, this.speed);
     if (cursors.left.isDown) {
-      this.x -= STEERING_POWER;
+      this.x -= dx;
     }
     if (cursors.right.isDown) {
-      this.x += STEERING_POWER;
+      this.x += dx;
     }
+    this.x = _.clamp(this.x, -1.1, 1.1);
 
     // rises & jumps
     const newY = Math.max(this.y + this.dy - GRAVITY, groundY);

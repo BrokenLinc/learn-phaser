@@ -23,30 +23,41 @@ type SlopeConfig = [number, number][];
 type TurnConfig = [number, number][];
 
 export const createRoad = () => {
+  // TODO: make track length 4000-12000 length
+
+  // NOTE: rise/run should never exceed 1/1
+  // Otherwise you'll glitch
   const slopeConfig: SlopeConfig = [
     [0, 0],
-    [100, 120],
-    [200, 0],
-    [300, -100],
-    [400, 20],
-    [500, 100],
+    // [30, 0],
+    [40, 30],
+    // [50, 0],
+    // [60, 10],
+    [70, 0],
+    // [100, 100],
+    // [200, 200],
+    // [300, -200],
+    [400, 100],
+    [500, 0],
     [600, -30],
-    [700, 90],
-    [800, -10],
+    [700, 70],
+    [800, 100],
     [900, 40],
     [1000, 0],
   ];
+  // NOTE: only a turn/run of about 7/100 is sustainable
+  // (sharper turns are ok if they are short and recoverable)
   const turnConfig: TurnConfig = [
     [0, 0],
-    [100, 5],
-    [200, 0],
-    [300, -5],
-    [400, 0],
-    [500, 2],
-    [600, 0],
-    [700, -8],
-    [800, 0],
-    [900, 3],
+    [100, 7],
+    // [200, 0],
+    [300, -7],
+    [400, 12],
+    [500, 5],
+    // [600, 0],
+    [700, -7],
+    // [800, 0],
+    [900, 2],
     [1000, 0],
   ];
   return createRoadWithConfigs(1000, slopeConfig, turnConfig);
