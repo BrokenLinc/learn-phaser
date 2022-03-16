@@ -1,38 +1,29 @@
-import _ from 'lodash';
-
-import { SCREEN_CENTER } from '../constants';
 import { MainScene } from '../scenes/MainScene';
 
-export interface PlayerInterface {
+export interface PlayerConfig {
   x: number;
   y: number;
 }
 
-export class Player implements PlayerInterface {
+export class Player {
   scene: MainScene;
-  x: number;
-  y: number;
-  sprite?: Phaser.GameObjects.Image;
+  sprite: Phaser.Physics.Arcade.Sprite;
 
-  constructor(scene: MainScene, initialValues?: Partial<PlayerInterface>) {
+  constructor(scene: MainScene, config: Partial<PlayerConfig> = {}) {
     this.scene = scene;
-    this.x = SCREEN_CENTER.x;
-    this.y = SCREEN_CENTER.y;
-    _.assign(this, initialValues);
-  }
-
-  init() {
-    // Add sprites to scene
-    this.sprite = this.scene.add.image(0, 0, 'player');
+    const { x = 0, y = 0 } = config;
+    this.sprite = this.scene.physics.add.sprite(x, y, 'player');
     this.sprite.setOrigin(0.5, 0.5);
   }
 
   restart() {}
 
   update(dt: number) {
-    const { cursors } = this.scene;
+    const { scene, sprite } = this;
+    const { cursors } = scene;
 
-    let speed = 10; // TODO: move into game state w/mods
+    const baseSpeed = 10; // TODO: move into game state w/mods
+    let speed = baseSpeed * 60; //dt
 
     // Negate diagnoal movement boost
     // Note that analog movement would require a vector multiplication approach
@@ -43,23 +34,22 @@ export class Player implements PlayerInterface {
       speed /= 1.41; // sqrt(2)
     }
 
+    sprite.setVelocityX(0);
+    sprite.setVelocityY(0);
+
     // Keyboard input
     if (cursors?.up.isDown) {
-      this.y -= speed;
+      sprite.setVelocityY(-speed);
     }
     if (cursors?.right.isDown) {
-      this.x += speed;
+      sprite.setVelocityX(speed);
     }
     if (cursors?.down.isDown) {
-      this.y += speed;
+      sprite.setVelocityY(speed);
     }
     if (cursors?.left.isDown) {
-      this.x -= speed;
+      sprite.setVelocityX(-speed);
     }
-  }
-
-  render() {
-    this.sprite?.setPosition(this.x, this.y);
   }
 
   destroy() {
