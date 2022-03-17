@@ -14,6 +14,7 @@ export class Enemy {
     const { x = 0, y = 0 } = config;
     this.sprite = this.scene.enemiesGroup?.create(x, y, 'enemy');
     this.sprite.setOrigin(0.5, 0.5);
+    this.sprite.setData('object', this);
     this.sprite.setCircle(32); // half sprite size
   }
 

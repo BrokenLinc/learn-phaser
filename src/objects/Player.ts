@@ -22,7 +22,7 @@ export class Player {
     const { scene, sprite } = this;
     const { cursors } = scene;
 
-    const baseSpeed = 10; // TODO: move into game state w/mods
+    const baseSpeed = 7; // TODO: move into game state w/mods
     let speed = baseSpeed * 60; //dt
 
     // Negate diagnoal movement boost
