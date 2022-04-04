@@ -12,8 +12,9 @@ export class Player {
   constructor(scene: MainScene, config: Partial<PlayerConfig> = {}) {
     this.scene = scene;
     const { x = 0, y = 0 } = config;
-    this.sprite = this.scene.physics.add.sprite(x, y, 'player');
+    this.sprite = this.scene.physics.add.sprite(x, y, 'golem-2');
     this.sprite.setOrigin(0.5, 0.5);
+    this.sprite.setCircle(32, 32, 32); // half sprite size
   }
 
   restart() {}
@@ -22,7 +23,7 @@ export class Player {
     const { scene, sprite } = this;
     const { cursors } = scene;
 
-    const baseSpeed = 7; // TODO: move into game state w/mods
+    const baseSpeed = 5; // TODO: move into game state w/mods
     let speed = baseSpeed * 60; //dt
 
     // Negate diagnoal movement boost
@@ -50,6 +51,8 @@ export class Player {
     if (cursors?.left.isDown) {
       sprite.setVelocityX(-speed);
     }
+
+    sprite.setDepth(sprite.y);
   }
 
   destroy() {

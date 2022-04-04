@@ -1,3 +1,4 @@
+import { DISTANCE } from '../constants';
 import { MainScene } from '../scenes/MainScene';
 
 export interface WeaponConfig {}
@@ -39,6 +40,7 @@ export interface SpearConfig {
   y: number;
 }
 
+// TODO: Add Projectile interface
 export class Spear {
   scene: MainScene;
   sprite: Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
@@ -53,7 +55,7 @@ export class Spear {
     this.sprite.setDisplaySize(16, 16);
     this.sprite.setOrigin(0.5, 0.5);
     this.sprite.setData('object', this);
-    this.sprite.setCircle(16);
+    this.sprite.setCircle(32);
 
     const target = this.scene.physics.closest(
       this.sprite,
@@ -63,15 +65,30 @@ export class Spear {
 
     const angle = getAngle(this.sprite, target);
 
-    this.sprite.setVelocity(5 * 60 * Math.cos(angle), 5 * 60 * Math.sin(angle));
+    const baseSpeed = 5; // TODO: move into config
+    this.sprite.setVelocity(
+      baseSpeed * 60 * Math.cos(angle),
+      baseSpeed * 60 * Math.sin(angle)
+    );
   }
 
   restart() {}
 
   update(dt: number) {
-    const { scene } = this;
+    const { scene, sprite } = this;
     const { player } = scene;
     if (!player) return;
+
+    const distance = Phaser.Math.Distance.Between(
+      sprite.x,
+      sprite.y,
+      player.sprite.x,
+      player.sprite.y
+    );
+
+    if (distance > DISTANCE.despawn) {
+      this.destroy();
+    }
   }
 
   destroy() {

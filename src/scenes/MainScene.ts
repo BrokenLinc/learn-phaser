@@ -2,10 +2,10 @@ import 'phaser';
 import _ from 'lodash';
 
 import {
+  DISTANCE,
   KEY_DOWN,
   SCENE,
   SCREEN,
-  SCREEN_BOUNDS_DIST,
   SCREEN_CENTER,
   STATE,
 } from '../constants';
@@ -22,7 +22,7 @@ export class MainScene extends Phaser.Scene {
   enemiesGroup?: Phaser.Physics.Arcade.Group;
   bulletsGroup?: Phaser.Physics.Arcade.Group;
   settings?: Settings;
-  sprites?: Partial<Record<string, Phaser.GameObjects.Image>>;
+  background?: Phaser.GameObjects.TileSprite;
   cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
   timeElapsed: number = 0;
 
@@ -31,9 +31,12 @@ export class MainScene extends Phaser.Scene {
   }
 
   preload() {
-    // this.load.image('bg', './sprites/bg.png');
+    this.load.image('bg', './sprites/bg.png');
+    this.load.image('bg-tile', './sprites/bg-tile.png');
     this.load.image('player', './sprites/player.png');
     this.load.image('enemy', './sprites/enemy.png');
+    this.load.image('orc', './sprites/orc.png');
+    this.load.image('golem-2', './sprites/golem-2.png');
   }
 
   create() {
@@ -43,38 +46,22 @@ export class MainScene extends Phaser.Scene {
     this.physics.add.overlap(
       this.enemiesGroup,
       this.bulletsGroup,
-      (enemySprite, bulletSprite) => {
-        const enemy = enemySprite.getData('object') as Enemy;
-        const spear = bulletSprite.getData('object') as Spear;
-
-        // escape if already destroyed
-        if (!enemy || !spear) {
-          return;
-        }
-
-        // Simple test... TODO: make it better
-        this.bulletsGroup?.remove(bulletSprite);
-        spear.destroy();
-
-        // Simple test... TODO: make it better
-        _.remove(this.enemies, enemy);
-        this.enemiesGroup?.remove(enemySprite);
-        enemy.destroy();
-      },
+      this.handleBulletEnemyCollide,
       undefined,
       this
     );
 
-    // Add sprites
-    this.sprites = {
-      // background: this.add.image(0, 0, 'bg'),
-    };
+    // TODO: refactor into BackgroundLayer object
+    this.background = this.add.tileSprite(0, 0, SCREEN.w, SCREEN.h, 'bg-tile');
+    this.background.setOrigin(0, 0);
+    this.background.setScrollFactor(0, 0);
 
     // Add game objects
     this.player = new Player(this, SCREEN_CENTER);
+    // this.physics.add.collider(this.enemiesGroup, this.player?.sprite);
     this.settings = new Settings(this);
 
-    this.cameras.main.setBounds(0, 0, SCREEN.w, 10000);
+    // Camera follow
     this.cameras.main.startFollow(this.player.sprite, false);
 
     // Keyboard input
@@ -93,15 +80,38 @@ export class MainScene extends Phaser.Scene {
     });
   }
 
-  addEnemy() {
-    if (!this.player) return;
+  handleBulletEnemyCollide(
+    enemySprite: Phaser.Types.Physics.Arcade.GameObjectWithBody,
+    bulletSprite: Phaser.Types.Physics.Arcade.GameObjectWithBody
+  ) {
+    const enemy = enemySprite.getData('object') as Enemy;
+    const spear = bulletSprite.getData('object') as Spear;
 
-    const angle = Math.random() * Math.PI; // spawn from bottom half
-    const distance = SCREEN_BOUNDS_DIST + 40;
-    this.enemies.push(
+    // escape if already destroyed
+    if (!enemy || !spear) {
+      return;
+    }
+
+    // Simple test... TODO: make it better
+    this.bulletsGroup?.remove(bulletSprite);
+    spear.destroy();
+
+    // Simple test... TODO: make it better
+    _.remove(this.enemies, enemy);
+    this.enemiesGroup?.remove(enemySprite);
+    enemy.destroy();
+  }
+
+  addEnemy() {
+    const { player, enemies } = this;
+    if (!player) return;
+
+    const angle = Math.random() * Math.PI * 2; // remove [*2] to spawn from bottom half
+    const distance = DISTANCE.spawn;
+    enemies.push(
       new Enemy(this, {
-        x: this.player.sprite.x + Math.cos(angle) * distance,
-        y: this.player.sprite.y + Math.sin(angle) * distance,
+        x: player.sprite.x + Math.cos(angle) * distance,
+        y: player.sprite.y + Math.sin(angle) * distance,
       })
     );
   }
@@ -121,22 +131,29 @@ export class MainScene extends Phaser.Scene {
       case STATE.play:
         const dt = Math.min(1, delta / 1000); // ms to sec
         if (
-          Math.floor((this.timeElapsed + dt) / 1) >
-          Math.floor(this.timeElapsed / 1)
+          Math.floor((this.timeElapsed + dt) / 0.4) >
+          Math.floor(this.timeElapsed / 0.4)
         ) {
           this.addEnemy();
         }
         if (
-          Math.floor((this.timeElapsed + dt) / 0.2) >
-          Math.floor(this.timeElapsed / 0.2)
+          Math.floor((this.timeElapsed + dt) / 0.5) >
+          Math.floor(this.timeElapsed / 0.5)
         ) {
           new Spear(this);
         }
         this.timeElapsed += dt;
         // Update game objects (passing dt)
         this.player?.update(dt);
+        this.background?.setTilePosition(
+          this.player?.sprite.x,
+          this.player?.sprite.y
+        );
         this.enemies.forEach((enemy) => enemy.update(dt));
-        // this.enemies?.children.each((enemy) => enemy.update(dt));
+        this.bulletsGroup?.children.each((bulletSprite) => {
+          const bullet = bulletSprite.getData('object') as Spear;
+          bullet.update(dt);
+        });
 
         break;
       case STATE.gameOver:

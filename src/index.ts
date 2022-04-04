@@ -9,6 +9,7 @@ const config = {
   type: Phaser.AUTO,
   width: SCREEN.w,
   height: SCREEN.h,
+  // antialias: false,
 
   scale: {
     mode: Phaser.Scale.FIT,
@@ -19,7 +20,7 @@ const config = {
     default: 'arcade',
     arcade: {
       gravity: { y: 0 },
-      debug: false,
+      // debug: true,
     },
   },
 
